@@ -643,7 +643,6 @@ Public Class ClassDebuggerRunner
                                                                                          Nothing,
                                                                                          Nothing,
                                                                                          Nothing,
-                                                                                         Nothing,
                                                                                          True,
                                                                                          Nothing,
                                                                                          iCompilerType)) Then
@@ -692,7 +691,6 @@ Public Class ClassDebuggerRunner
                                                                                          False,
                                                                                          sOutputFile,
                                                                                          m_CurrentConfig,
-                                                                                         Nothing,
                                                                                          Nothing,
                                                                                          Nothing,
                                                                                          Nothing,

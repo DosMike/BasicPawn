@@ -15,6 +15,8 @@
 'along with this program. If Not, see < http: //www.gnu.org/licenses/>.
 
 
+Imports System.Drawing.Drawing2D
+Imports System.IO
 Imports System.Text.RegularExpressions
 Imports BasicPawn
 Imports ICSharpCode.TextEditor
@@ -715,7 +717,6 @@ Public Class ClassTextEditorTools
     ''' <param name="sWorkingDirectory">Sets the compiler working directory. Use |Nothing| to use the working directioy from the active tab.</param>
     ''' <param name="sCompilerPath">The compiler path. Use |Nothing| to get the source from the active tab.</param>
     ''' <param name="sIncludePaths">The include paths seperated by ';'. Use |Nothing| to get the source from the active tab.</param>
-    ''' <param name="sEmulateSourceFile">Replaces the printed temporary path.</param>
     ''' <param name="bUseCustomCompilerOptions">If true it will use the configs custom compiler options, false otherwise.</param>
     ''' <param name="sCompilerOutput">The compiler output.</param>
     ''' <param name="iCompilerType"></param>
@@ -732,7 +733,6 @@ Public Class ClassTextEditorTools
                                   Optional sCompilerSearchPath As String = Nothing,
                                   Optional sIncludePaths As String = Nothing,
                                   Optional sIncludeSearchPath As String = Nothing,
-                                  Optional sEmulateSourceFile As String = Nothing,
                                   Optional bUseCustomCompilerOptions As Boolean = True,
                                   ByRef Optional sCompilerOutput As String = Nothing,
                                   ByRef Optional iCompilerType As ENUM_COMPILER_TYPE = ENUM_COMPILER_TYPE.UNKNOWN) As Boolean
@@ -749,50 +749,41 @@ Public Class ClassTextEditorTools
                 mConfig = mTab.m_ActiveConfig
             End If
 
-            If (Not String.IsNullOrEmpty(sEmulateSourceFile)) Then
-                With New Text.StringBuilder
-                    .AppendFormat("#file ""{0}""", sEmulateSourceFile).AppendLine()
-                    .AppendLine("#line 0")
-                    .AppendLine(sSource)
-
-                    sSource = .ToString
-                End With
-            End If
-
             g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_INFO, "Compiling source started!", False, True, True)
 
             Dim iExitCode As Integer = 0
             Dim sOutput As String = ""
             Dim sLines As String()
 
+            ' Validate input file
+            Dim sFilePath As String = sFile
+            If (String.IsNullOrEmpty(sFilePath)) Then
+                If (mTab.m_Index < 0) Then
+                    g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
+                    Return False
+                End If
+
+                If (mTab.m_IsUnsaved AndAlso
+                                        Not g_mFormMain.g_ClassTabControl.PromptSaveTab(mTab.m_Index, False, True, True)) Then
+                    g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
+                    Return False
+                End If
+
+                If (mTab.m_IsUnsaved) Then
+                    g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
+                    Return False
+                End If
+
+                sFilePath = mTab.m_File
+            End If
+
+            'Normalize path casing
+            sFilePath = ClassTools.ClassFileSystem.GetRealPath(sFilePath)
+
+
             'Check compiler
             If (sCompilerPath Is Nothing) Then
                 If (mConfig.g_iCompilingType = ClassSettings.ENUM_COMPILING_TYPE.AUTOMATIC) Then
-                    Dim sFilePath As String = sFile
-
-                    If (String.IsNullOrEmpty(sFilePath)) Then
-                        If (mTab.m_Index < 0) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        If (mTab.m_IsUnsaved AndAlso
-                                    Not g_mFormMain.g_ClassTabControl.PromptSaveTab(mTab.m_Index, False, True, True)) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        If (mTab.m_IsUnsaved) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        sFilePath = mTab.m_File
-                    End If
-
-                    'Normalize path casing
-                    sFilePath = ClassTools.ClassFileSystem.GetRealPath(sFilePath)
-
                     Dim sFileDirectory As String = IO.Path.GetDirectoryName(sFilePath)
                     If (Not String.IsNullOrEmpty(sCompilerSearchPath)) Then
                         sFileDirectory = sCompilerSearchPath
@@ -843,31 +834,6 @@ Public Class ClassTextEditorTools
             'Check include path
             If (sIncludePaths Is Nothing) Then
                 If (mConfig.g_iCompilingType = ClassSettings.ENUM_COMPILING_TYPE.AUTOMATIC) Then
-                    Dim sFilePath As String = sFile
-
-                    If (String.IsNullOrEmpty(sFilePath)) Then
-                        If (mTab.m_Index < 0) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        If (mTab.m_IsUnsaved AndAlso
-                                        Not g_mFormMain.g_ClassTabControl.PromptSaveTab(mTab.m_Index, False, True, True)) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        If (mTab.m_IsUnsaved) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        sFilePath = mTab.m_File
-                    End If
-
-                    'Normalize path casing
-                    sFilePath = ClassTools.ClassFileSystem.GetRealPath(sFilePath)
-
                     Dim sFileDirectory As String = IO.Path.GetDirectoryName(sFilePath)
                     If (Not String.IsNullOrEmpty(sIncludeSearchPath)) Then
                         sFileDirectory = sIncludeSearchPath
@@ -899,31 +865,6 @@ Public Class ClassTextEditorTools
             'Set output path
             If (Not bTesting) Then
                 If (String.IsNullOrEmpty(sOutputFile)) Then
-                    Dim sFilePath As String = sFile
-
-                    If (String.IsNullOrEmpty(sFilePath)) Then
-                        If (mTab.m_Index < 0) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        If (mTab.m_IsUnsaved AndAlso
-                                    Not g_mFormMain.g_ClassTabControl.PromptSaveTab(mTab.m_Index, False, True, True)) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        If (mTab.m_IsUnsaved) Then
-                            g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_ERROR, "Compiling failed! Could not get current source file!", False, False, True)
-                            Return False
-                        End If
-
-                        sFilePath = mTab.m_File
-                    End If
-
-                    'Normalize path casing
-                    sFilePath = ClassTools.ClassFileSystem.GetRealPath(sFilePath)
-
                     If (mConfig.g_iCompilingType = ClassSettings.ENUM_COMPILING_TYPE.AUTOMATIC) Then
                         Dim sOutputDir As String = IO.Path.Combine(IO.Path.GetDirectoryName(sFilePath), "compiled")
 
@@ -945,8 +886,9 @@ Public Class ClassTextEditorTools
 
             Dim sTmpOutputFile As String = IO.Path.Combine(IO.Path.GetTempPath, IO.Path.GetFileNameWithoutExtension(IO.Path.GetRandomFileName))
 
-            Dim TmpSourceFile As String = IO.Path.ChangeExtension(IO.Path.Combine(IO.Path.GetTempPath, IO.Path.GetRandomFileName), ".src")
-            IO.File.WriteAllText(TmpSourceFile, sSource)
+            ' source has to be saved anyways, why use temp files!?
+            'Dim TmpSourceFile As String = IO.Path.ChangeExtension(IO.Path.Combine(IO.Path.GetTempPath, IO.Path.GetRandomFileName), ".src")
+            'IO.File.WriteAllText(TmpSourceFile, sSource)
 
             Dim lIncludeList As New List(Of String)
             For Each sInclude As String In sIncludePaths.Split(";"c)
@@ -979,7 +921,7 @@ Public Class ClassTextEditorTools
 
             'Build arguments 
             Dim lArguments As New List(Of String) From {
-               String.Format("""{0}"" {1} -o""{2}""", TmpSourceFile, String.Join(" ", lIncludeList.ToArray), sTmpOutputFile)
+               String.Format("""{0}"" {1} -o""{2}""", sFilePath, String.Join(" ", lIncludeList.ToArray), sTmpOutputFile)
             }
 
             If (bUseCustomCompilerOptions) Then
@@ -1001,7 +943,7 @@ Public Class ClassTextEditorTools
 
             'Execute pre-build events
             If (mBuildEvents IsNot Nothing AndAlso Not String.IsNullOrEmpty(mBuildEvents.m_PreBuildCmd)) Then
-                g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_INFO, "Executing pre-build event...", False, False, True)
+                g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_INFO, "Executing pre-build Event...", False, False, True)
 
                 Dim iBuildEventExitCode As Integer = -1
                 Dim sBuildEventOutput As String = ""
@@ -1013,7 +955,7 @@ Public Class ClassTextEditorTools
                     g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_NONE, vbTab & sOutputLines(i), False, False, True)
                 Next
 
-                g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_INFO, "Completed pre-build event with exit code: " & iBuildEventExitCode, False, False, True)
+                g_mFormMain.g_mUCInformationList.PrintInformation(ClassInformationListBox.ENUM_ICONS.ICO_INFO, "Completed pre-build Event With Exit code: " & iBuildEventExitCode, False, False, True)
             End If
 
             'Compile 
@@ -1025,7 +967,7 @@ Public Class ClassTextEditorTools
 
             sCompilerOutput = sOutput
 
-            IO.File.Delete(TmpSourceFile)
+            'IO.File.Delete(TmpSourceFile)
 
             sLines = sOutput.Split(New String() {Environment.NewLine, vbLf}, 0)
             For i = 0 To sLines.Length - 1

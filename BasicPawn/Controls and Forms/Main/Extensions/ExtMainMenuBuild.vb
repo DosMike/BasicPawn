@@ -38,18 +38,13 @@ Partial Public Class FormMain
 
                 Dim sOutputFile As String = ""
                 g_ClassTextEditorTools.CompileSource(Nothing,
-                                                     Nothing,
+                                                     sSourceFile,
                                                      sSource,
                                                      False,
                                                      True,
                                                      sOutputFile,
                                                      Nothing,
-                                                     If(sSourceFile Is Nothing, Nothing, IO.Path.GetDirectoryName(sSourceFile)),
-                                                     Nothing,
-                                                     Nothing,
-                                                     Nothing,
-                                                     Nothing,
-                                                     sSourceFile)
+                                                     If(sSourceFile Is Nothing, Nothing, IO.Path.GetDirectoryName(sSourceFile)))
 
                 mProgress.m_Progress = 100
             End Using
@@ -81,7 +76,7 @@ Partial Public Class FormMain
                     Dim sOutputFile As String = ""
                     Dim sCompilerOutput As String = ""
                     Dim bSuccess = g_ClassTextEditorTools.CompileSource(mTab,
-                                                                        Nothing,
+                                                                        sSourceFile,
                                                                         sSource,
                                                                         False,
                                                                         True,
@@ -92,7 +87,6 @@ Partial Public Class FormMain
                                                                         Nothing,
                                                                         Nothing,
                                                                         Nothing,
-                                                                        sSourceFile,
                                                                         True,
                                                                         sCompilerOutput)
 
@@ -184,18 +178,13 @@ Partial Public Class FormMain
 
                 Dim sOutputFile As String = ""
                 g_ClassTextEditorTools.CompileSource(Nothing,
-                                                     Nothing,
+                                                     sSourceFile,
                                                      sSource,
                                                      False,
                                                      True,
                                                      sOutputFile,
                                                      mConfig,
-                                                     If(sSourceFile Is Nothing, Nothing, IO.Path.GetDirectoryName(sSourceFile)),
-                                                     Nothing,
-                                                     Nothing,
-                                                     Nothing,
-                                                     Nothing,
-                                                     sSourceFile)
+                                                     If(sSourceFile Is Nothing, Nothing, IO.Path.GetDirectoryName(sSourceFile)))
 
                 mProgress.m_Progress = 100
             End Using

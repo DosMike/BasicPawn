@@ -143,7 +143,6 @@ Public Class FormMultiCompiler
                                                                                                                                            Nothing,
                                                                                                                                            Nothing,
                                                                                                                                            Nothing,
-                                                                                                                                           sSourceFile,
                                                                                                                                            True,
                                                                                                                                            sCompilerOutput)
                                                                              End Function)
